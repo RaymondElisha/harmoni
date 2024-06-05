@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to HarmoniConnect</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'signup' %}">Sign Up</a></li>
+                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="{% url 'service' %}">Services</a></li>
+                <li><a href="{% url 'review' %}">Reviews</a></li>
+                <li><a href="{% url 'search' %}">Search</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Our Services</h2>
+        <ul id="services-list"></ul>
+    </main>
+    <footer>
+        <p>&copy; 2024 HarmoniConnect</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/services/')
+                .then(response => response.json())
+                .then(data => {
+                    const servicesList = document.getElementById('services-list');
+                    data.forEach(service => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = service.name;
+                        servicesList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching services:', error));
+        });
+    </script>
+    <style>
+body {
+    background-color: #0d0d0d;
+    color: #e0e0e0;
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #00ffcc;
+    font-size: 2.5em;
+    margin: 0;
+}
+
+main {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+    width: 80%;
+    max-width: 800px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="datetime-local"],
+input[type="password"],
+input[type="email"],
+input[type="number"] {
+    padding: 10px;
+    font-size: 1em;
+    border: 2px solid #00ffcc;
+    border-radius: 5px;
+    background: #0d0d0d;
+    color: #e0e0e0;
+    outline: none;
+}
+
+button {
+    padding: 10px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 5px;
+    background: #00ffcc;
+    color: #0d0d0d;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #00e6b8;
+}
+
+#message {
+    margin-top: 20px;
+    font-size: 1.2em;
+    color: #ff6666;
+}
+
+footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #777;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 10px;
+}
+
+nav ul li a {
+    color: #00ffcc;
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+nav ul li a:hover {
+    color: #00e6b8;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.7);
+}
+
+.card h2 {
+    margin: 0;
+    color: #00ffcc;
+}
+
+.card p {
+    margin: 10px 0;
+    color: #e0e0e0;
+}
+
+    </style>
+</body>
+</html>
