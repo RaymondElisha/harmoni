@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post a New Service</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Post a New Service</h1>
+    </header>
+    <main>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="text" name="title" placeholder="Service Title" required>
+            </div>
+            <div class="form-group">
+                <textarea name="description" placeholder="Service Description" required></textarea>
+            </div>
+            <div class="form-group">
+                <input type="number" name="price" placeholder="Service Price" required>
+            </div>
+            <div class="form-group">
+                <input type="file" name="image" required>
+            </div>
+            <button type="submit">Post Service</button>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2024 HarmoniConnect</p>
+    </footer>
+</body>
+</html>

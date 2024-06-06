@@ -1,19 +1,25 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from rest_framework import viewsets, permissions
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
+#from django.contrib.auth.views import LoginView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from .permissions import IsServiceProvider
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Service, ServiceProvider, Booking, Review
+from .models import CustomUser, Service, ServiceProvider, Booking, Review
 from .serializers import ServiceSerializer, ServiceProviderSerializer, BookingSerializer, ReviewSerializer, BookingSerializer
 from django.urls import reverse_lazy
 from django.views import generic
-from .forms import UserRegisterForm
+from .forms import UserRegisterForm, CustomUserCreationForm
 from datetime import datetime
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.views.generic import CreateView, ListView, TemplateView
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.views.generic.edit import CreateView
 
 # ViewSets
 class CustomPermission(permissions.BasePermission):
@@ -151,11 +157,78 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 # Generic views for user registration and static pages
-class SignUpView(generic.CreateView):
-    form_class = UserRegisterForm
-    success_url = reverse_lazy('login')
+#class SignUpView(generic.CreateView):
+#    form_class = UserRegisterForm
+#    success_url = reverse_lazy('login')
+#    template_name = 'harmoniconnect/register.html'
+class SignUpView(CreateView):
+    model = CustomUser
+    form_class = CustomUserCreationForm
     template_name = 'harmoniconnect/register.html'
+    success_url = reverse_lazy('login')
+@login_required
+def client_dashboard(request):
+    if request.user.user_type != 1:  # If not a client
+        return redirect('home')
+    return render(request, 'harmoniconnect/clientdashboard.html')
 
+# views.py
+
+@login_required
+def service_provider_dashboard(request):
+    if request.user.user_type != 2:  # If not a service provider
+        return redirect('home')
+    return render(request, 'harmoniconnect/serviceproviderdashboard.html')
+
+@login_required
+def post_service(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        description = request.POST['description']
+        price = request.POST['price']
+        image = request.FILES['image']
+        Service.objects.create(provider=request.user, title=title, description=description, price=price, image=image)
+        return redirect('provider_dashboard')
+    return render(request, 'post_service.html')
+
+class ServiceListView(ListView):
+    model = Service
+    template_name = 'home.html'
+    context_object_name = 'services'
+
+@login_required
+def book_service(request, service_id):
+    service = Service.objects.get(id=service_id)
+    Booking.objects.create(service=service, client=request.user)
+    return redirect('client_dashboard')
+
+
+class ClientDashboardView(TemplateView):
+    template_name = 'clientdashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['services'] = Service.objects.all()
+        return context
+
+class ProviderDashboardView(TemplateView):
+    template_name = 'serviceproviderdashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['services'] = self.request.user.services.all()
+        return context
+    
+@csrf_exempt
+def process_payment(request):
+    if request.method == 'POST':
+        mobile_number = request.POST['mobile_number']
+        amount = request.POST['amount']
+        # Add mobile money API integration logic here
+        # For example, integrate with a third-party payment gateway
+        # Process the payment
+        return JsonResponse({'status': 'success', 'message': 'Payment processed successfully'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 # Views to render HTML templates
 def home(request):
     return render(request, 'harmoniconnect/home.html')

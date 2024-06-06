@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -8,6 +8,32 @@ from django.db.models import Avg
 class CustomUser(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     is_service_provider = models.BooleanField(default=False)  # Identify if the user is a service provider
+    USER_TYPE_CHOICES = (
+        ('client', 'Client'),
+        ('service_provider', 'Service Provider'),
+    )
+
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)
+    class Meta:
+        verbose_name = 'user'
+        verbose_name_plural = 'users'
+        swappable = 'AUTH_USER_MODEL'
+
+    groups = models.ManyToManyField(
+        Group,
+        related_name='custom_user_set',  # Custom related name
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups',
+    )
+
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='custom_user_set',  # Custom related name
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions',
+    )
 
 class ServiceProvider(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='service_provider')
@@ -115,3 +141,15 @@ def update_provider_rating(sender, instance, **kwargs):
     new_rating = Review.objects.filter(booking__service__provider=provider).aggregate(Avg('rating'))['rating__avg']
     provider.average_rating = new_rating or 0.0  # Reset to 0.0 if no ratings
     provider.save()
+
+# models.py
+
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class User(AbstractUser):
+    USER_TYPE_CHOICES = (
+        (1, 'client'),
+        (2, 'service_provider'),
+    )
+    user_type = models.PositiveSmallIntegerField(choices=USER_TYPE_CHOICES)
